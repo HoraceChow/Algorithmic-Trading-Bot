@@ -4,7 +4,7 @@ Developed a few algorithmic trading bots and an algorithm that determines market
 
 ## Files
 There are 3 different strategy and an algorithm
-***Please refer to the top of the code for a breif explaination***
+***Breif explaination on each trading bot files***
 * CCIWithPreditionEntry - This trading bot estimate the CCI value and enter based on the value crossover.
 * mypointstrates - This trading bot uses the two legged pull back pattern with the Autotrendchannel's algorithm.
 * Anticlimax(on going) - This trading bot use the anticlimax pattern, which focus price exhaustion trading.
@@ -14,6 +14,6 @@ There are 3 different strategy and an algorithm
 Usage requires using Ninjatrader trading platform
 
 ## On going 
-Currently completing AntiClimax trading bot, need to implement
+Currently completing AntiClimax trading bot, still need to implement
 * Daily stoploss
 * risk management
