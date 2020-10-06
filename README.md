@@ -16,6 +16,9 @@ There are 3 different strategy and an algorithm
 * Anticlimax(on going) - This trading bot use the anticlimax pattern, which focus price exhaustion trading.
 * AutoTrendChannels - An algorithm algorithm that determines market bias, and find the most suitable trends channels, when implemented into trading bot that focus on trading with market bias, it would increase probability of winning trades while filtering bad trades.
 
+## Challenges
+This project was one of the most interesting project that I have done. It was a very fulfilling time but frustrating, especially when you thought you would've made great progress on an algorithmic trading bot, but only to find it was not profitable. Due to this reason, I was able to come up with loads of different variation of bots. The trading bots within this repository are backtest and shown profitable, the AntiClimax trading bot had the highest win rate.
+
 ## On going 
 Currently completing AntiClimax trading bot, still need to implement
 * Daily stoploss
