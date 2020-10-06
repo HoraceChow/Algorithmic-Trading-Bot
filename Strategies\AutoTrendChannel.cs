@@ -30,38 +30,37 @@ using NinjaTrader.NinjaScript.DrawingTools;
 
 namespace NinjaTrader.NinjaScript.Strategies{
 	public class AutoTrendChannel : Strategy{
-		private int				lastHighBar			= -1;
-		private int				lastLowBar			= -1;
-		private double			lastHighPrice		= double.MinValue;
-		private double			lastLowPrice		= double.MaxValue;
-		private bool 			trendBreak 			= true;
-		private TrendChannels	CurrentTrend;
-		private TrendQueue		trendChannel;
-		private Swing			swing;
+		private int lastHighBar = -1;
+		private int lastLowBar = -1;
+		private double lastHighPrice = double.MinValue;
+		private double lastLowPrice = double.MaxValue;
+		private bool trendBreak = true;
+		private TrendChannels CurrentTrend;
+		private TrendQueue trendChannel;
+		private Swing swing;
 
 		protected override void OnStateChange(){	//Runs when strategy is initialized
 			if (State == State.SetDefaults){
-				Description									= @"Algorithm that automatically plots trend channel";
-				Name										= "AutoTrendChannel";
-				Calculate									= Calculate.OnBarClose;
-				Strength									= 5;
-				NumberOfTrendChannel						= 5;
-				EntriesPerDirection							= 1;
-				EntryHandling								= EntryHandling.AllEntries;
-				IsExitOnSessionCloseStrategy				= true;
-				ExitOnSessionCloseSeconds					= 30;
-				IsFillLimitOnTouch							= false;
-				MaximumBarsLookBack							= MaximumBarsLookBack.TwoHundredFiftySix;
-				OrderFillResolution							= OrderFillResolution.Standard;
-				Slippage									= 0;
-				StartBehavior								= StartBehavior.WaitUntilFlat;
-				TimeInForce									= TimeInForce.Gtc;
-				TraceOrders									= false;
-				RealtimeErrorHandling						= RealtimeErrorHandling.StopCancelClose;
-				StopTargetHandling							= StopTargetHandling.PerEntryExecution;
-				BarsRequiredToTrade							= 4;
-				
-				IsInstantiatedOnEachOptimizationIteration	= true;
+				Description	= @"Algorithm that automatically plots trend channel";
+				Name = "AutoTrendChannel";
+				Calculate = Calculate.OnBarClose;
+				Strength = 5;
+				NumberOfTrendChannel = 5;
+				EntriesPerDirection	= 1;
+				EntryHandling = EntryHandling.AllEntries;
+				IsExitOnSessionCloseStrategy = true;
+				ExitOnSessionCloseSeconds = 30;
+				IsFillLimitOnTouch = false;
+				MaximumBarsLookBack	= MaximumBarsLookBack.TwoHundredFiftySix;
+				OrderFillResolution	= OrderFillResolution.Standard;
+				Slippage = 0;
+				StartBehavior = StartBehavior.WaitUntilFlat;
+				TimeInForce	= TimeInForce.Gtc;
+				TraceOrders	= false;
+				RealtimeErrorHandling = RealtimeErrorHandling.StopCancelClose;
+				StopTargetHandling = StopTargetHandling.PerEntryExecution;
+				BarsRequiredToTrade	= 4;
+				IsInstantiatedOnEachOptimizationIteration = true;
 			}
 			else if (State == State.Configure){		//Runes when strategy is added onto the chart
 				AddDataSeries("ES 09-20", Data.BarsPeriodType.Tick, 2000);
@@ -132,7 +131,6 @@ namespace NinjaTrader.NinjaScript.Strategies{
 			public TrendChannel		Trend;
 			public bool				IsHigh;
 			public double 			Slope;
-
 			public TrendChannels(int startBar, double startPrice, int endBar, double endPrice, int parallelBar, double parallelPrice){
 				StartBar		= startBar;
 				StartPrice		= startPrice;

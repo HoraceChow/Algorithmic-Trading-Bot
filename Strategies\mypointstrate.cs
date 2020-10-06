@@ -30,50 +30,48 @@ using NinjaTrader.NinjaScript.DrawingTools;
  
 namespace NinjaTrader.NinjaScript.Strategies{
 	public class mypointstrate : Strategy{
-		private buy_2lpb buy_leg 		= null;
-		private sell_2lpb sell_leg 		= null;
-		private bool sellEntryBar 		= false;
-		private bool buyEntryBar 		= false;
-		private static bool enter_buy	= false;
-		private static bool enter_sell	= false;
+		private buy_2lpb buy_leg = null;
+		private sell_2lpb sell_leg = null;
+		private bool sellEntryBar = false;
+		private bool buyEntryBar = false;
+		private static bool enter_buy = false;
+		private static bool enter_sell = false;
 
-		private int				lastHighBar			= -1;
-		private int				lastLowBar			= -1;
-		private double			lastHighPrice		= double.MinValue;
-		private double			lastLowPrice		= double.MaxValue;
-		private bool 			trendBreak 			= true;
-		private TrendChannels	CurrentTrend;
-		private TrendQueue		trendChannel;
-		private Swing			swing;
+		private int lastHighBar	= -1;
+		private int lastLowBar = -1;
+		private double lastHighPrice = double.MinValue;
+		private double lastLowPrice = double.MaxValue;
+		private bool trendBreak = true;
+		private TrendChannels CurrentTrend;
+		private TrendQueue trendChannel;
+		private Swing swing;
 
 		protected override void OnStateChange(){	//Runs when strategy is initialized
 			if (State == State.SetDefaults){
-				Description									= @"Two Leg pull back pattern with AutoTrendChannel";
-				Name										= "mypointstrate";
-				Calculate									= Calculate.OnBarClose;
-				Strength									= 5;
-				NumberOfTrendChannel						= 5;
-				EntriesPerDirection							= 1;
-				EntryHandling								= EntryHandling.AllEntries;
-				IsExitOnSessionCloseStrategy				= true;
-				ExitOnSessionCloseSeconds					= 30;
-				IsFillLimitOnTouch							= false;
-				MaximumBarsLookBack							= MaximumBarsLookBack.TwoHundredFiftySix;
-				OrderFillResolution							= OrderFillResolution.Standard;
-				Slippage									= 0;
-				StartBehavior								= StartBehavior.WaitUntilFlat;
-				TimeInForce									= TimeInForce.Gtc;
-				TraceOrders									= false;
-				RealtimeErrorHandling						= RealtimeErrorHandling.StopCancelClose;
-				StopTargetHandling							= StopTargetHandling.PerEntryExecution;
-				BarsRequiredToTrade							= 5;
-				
-				IsInstantiatedOnEachOptimizationIteration	= true;
+				Description	= @"Two Leg pull back pattern with AutoTrendChannel";
+				Name = "mypointstrate";
+				Calculate = Calculate.OnBarClose;
+				Strength = 5;
+				NumberOfTrendChannel = 5;
+				EntriesPerDirection = 1;
+				EntryHandling = EntryHandling.AllEntries;
+				IsExitOnSessionCloseStrategy = true;
+				ExitOnSessionCloseSeconds = 30;
+				IsFillLimitOnTouch = false;
+				MaximumBarsLookBack = MaximumBarsLookBack.TwoHundredFiftySix;
+				OrderFillResolution = OrderFillResolution.Standard;
+				Slippage = 0;
+				StartBehavior = StartBehavior.WaitUntilFlat;
+				TimeInForce = TimeInForce.Gtc;
+				TraceOrders	= false;
+				RealtimeErrorHandling = RealtimeErrorHandling.StopCancelClose;
+				StopTargetHandling = StopTargetHandling.PerEntryExecution;
+				BarsRequiredToTrade = 5;
+				IsInstantiatedOnEachOptimizationIteration = true;
 			}
 			else if (State == State.Configure){ 	//Runes when strategy is added onto the chart
 				AddDataSeries(Data.BarsPeriodType.Tick, 1);
 				AddDataSeries("ES 09-20", Data.BarsPeriodType.Tick, 2000); //Using 2000 tick charts -> each price bar
-				
 				SetProfitTarget(CalculationMode.Ticks, 4);
 				SetStopLoss(CalculationMode.Ticks, 8);
 			}
@@ -157,23 +155,23 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		}
 		#region Helpers 
 		private class TrendChannels{
-			public int				StartBar;
-			public double			StartPrice;
-			public int				EndBar;
-			public double			EndPrice;
-			public int 				ParallelBar;
-			public double 			ParallelPrice;
-			public TrendChannel		Trend;
-			public bool				IsHigh;
-			public double 			Slope;
+			public int StartBar;
+			public double StartPrice;
+			public int EndBar;
+			public double EndPrice;
+			public int ParallelBar;
+			public double ParallelPrice;
+			public TrendChannel Trend;
+			public bool IsHigh;
+			public double Slope;
 
 			public TrendChannels(int startBar, double startPrice, int endBar, double endPrice, int parallelBar, double parallelPrice){
-				StartBar		= startBar;
-				StartPrice		= startPrice;
-				EndBar			= endBar;
-				EndPrice		= endPrice;
-				ParallelBar 	= parallelBar;
-				ParallelPrice	= parallelPrice;
+				StartBar = startBar;
+				StartPrice = startPrice;
+				EndBar = endBar;
+				EndPrice = endPrice;
+				ParallelBar = parallelBar;
+				ParallelPrice = parallelPrice;
 				Slope = (EndPrice-StartPrice)/(EndBar-StartBar);
 			}
 		}

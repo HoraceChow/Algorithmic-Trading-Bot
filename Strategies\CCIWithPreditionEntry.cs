@@ -42,44 +42,42 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		private double lastLow;
 		private int Stoplossstorer = 1;
 		
-		private Swing			swing;
-		private int 			isUp 				= 0;
-		private int 			lastCurrentBar 		= 0;
-		private int				lastHighBar			= -1;
-		private int				lastLowBar			= -1;
-		private double			lastHighPrice		= double.MinValue;
-		private double			lastLowPrice		= double.MaxValue;
+		private Swing swing;
+		private int isUp = 0;
+		private int lastCurrentBar = 0;
+		private int lastHighBar = -1;
+		private int lastLowBar = -1;
+		private double lastHighPrice = double.MinValue;
+		private double lastLowPrice = double.MaxValue;
 
 		protected override void OnStateChange(){	//Runs when strategy is initialized
 			if (State == State.SetDefaults){
-				Description									= @"Trading using an estimation value of the CCI indictor, which secure more profits and entering trades before the current price bar formed allow the best entry";
-				Name										= "CCIWithPreditionEntry";
-				Calculate									= Calculate.OnBarClose;
-				EntriesPerDirection							= 1;
-				EntryHandling								= EntryHandling.AllEntries;
-				IsExitOnSessionCloseStrategy				= true;
-				ExitOnSessionCloseSeconds					= 30;
-				IsFillLimitOnTouch							= false;
-				MaximumBarsLookBack							= MaximumBarsLookBack.TwoHundredFiftySix;
-				OrderFillResolution							= OrderFillResolution.Standard;
-				Slippage									= 0;
-				StartBehavior								= StartBehavior.WaitUntilFlat;
-				TimeInForce									= TimeInForce.Gtc;
-				TraceOrders									= false;
-				RealtimeErrorHandling						= RealtimeErrorHandling.StopCancelClose;
-				StopTargetHandling							= StopTargetHandling.PerEntryExecution;
-				BarsRequiredToTrade							= 5;
-			
-				IsInstantiatedOnEachOptimizationIteration	= true;
+				Description	= @"Trading using an estimation value of the CCI indictor, which secure more profits and entering trades before the current price bar formed allow the best entry";
+				Name = "CCIWithPreditionEntry";
+				Calculate = Calculate.OnBarClose;
+				EntriesPerDirection	= 1;
+				EntryHandling = EntryHandling.AllEntries;
+				IsExitOnSessionCloseStrategy = true;
+				ExitOnSessionCloseSeconds = 30;
+				IsFillLimitOnTouch = false;
+				MaximumBarsLookBack = MaximumBarsLookBack.TwoHundredFiftySix;
+				OrderFillResolution = OrderFillResolution.Standard;
+				Slippage = 0;
+				StartBehavior = StartBehavior.WaitUntilFlat;
+				TimeInForce = TimeInForce.Gtc;
+				TraceOrders	= false;
+				RealtimeErrorHandling = RealtimeErrorHandling.StopCancelClose;
+				StopTargetHandling = StopTargetHandling.PerEntryExecution;
+				BarsRequiredToTrade = 5;
+				IsInstantiatedOnEachOptimizationIteration = true;
 			}
 			else if (State == State.Configure){		//Runes when strategy is added onto the chart
 				AddDataSeries(Data.BarsPeriodType.Tick, 1);	
 				AddDataSeries("ES 09-20", Data.BarsPeriodType.Tick, 2000);	//Using 2000 tick charts -> each price bar
-				
 				SetStopLoss(CalculationMode.Ticks, 12);
 			}
 			else if (State == State.DataLoaded){	//Called after data has been loaded
-                AddChartIndicator(CCI(14));
+				AddChartIndicator(CCI(14));
 				swing = Swing(Input, 2);
 			}
 		}
