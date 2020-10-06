@@ -122,22 +122,22 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		}
 		#region Helpers
 		private class TrendChannels{
-			public int				StartBar;
-			public double			StartPrice;
-			public int				EndBar;
-			public double			EndPrice;
-			public int 				ParallelBar;
-			public double 			ParallelPrice;
-			public TrendChannel		Trend;
-			public bool				IsHigh;
-			public double 			Slope;
+			public int StartBar;
+			public double StartPrice;
+			public int EndBar;
+			public double EndPrice;
+			public int ParallelBar;
+			public double ParallelPrice;
+			public TrendChannel	Trend;
+			public bool IsHigh;
+			public double Slope;
 			public TrendChannels(int startBar, double startPrice, int endBar, double endPrice, int parallelBar, double parallelPrice){
-				StartBar		= startBar;
-				StartPrice		= startPrice;
-				EndBar			= endBar;
-				EndPrice		= endPrice;
-				ParallelBar 	= parallelBar;
-				ParallelPrice	= parallelPrice;
+				StartBar = startBar;
+				StartPrice = startPrice;
+				EndBar = endBar;
+				EndPrice = endPrice;
+				ParallelBar = parallelBar;
+				ParallelPrice = parallelPrice;
 				Slope = (EndPrice-StartPrice)/(EndBar-StartBar);
 			}
 		}
