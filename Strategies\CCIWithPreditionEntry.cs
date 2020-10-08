@@ -5,7 +5,7 @@ This trading bot uses the CCI cross strategy, where whenever
 	- CCI Value is above 100 on previous price bar and CCI Value is below 100 on current price bar, then will enter short 
 	- CCI Value is above -100 on previous price bar and CCI Value is below -100 on current price bar, then will enter short
 However, the limitation of CCI cross strategy is that once the current price bar has formed, the CCI value could possibility be far off from CCI=100 or CCI=-100.
-This trading bot is able to enter while the price bar is still forming, by calculating the estimate price of CCI.
+This trading bot is able to enter while the price bar is still forming, by calculating the estimate price of CCI with the current price bar's High, Low and Current price.
 Which secures more profits, and entering trades before the current price bar is formed allow the best entry in case of price exhaustion 
 */
 
@@ -52,10 +52,10 @@ namespace NinjaTrader.NinjaScript.Strategies{
 
 		protected override void OnStateChange(){	//Runs when strategy is initialized
 			if (State == State.SetDefaults){
-				Description	= @"Trading using an estimation value of the CCI indictor, which secure more profits and entering trades before the current price bar formed allow the best entry";
+				Description = @"Trading using an estimation value of the CCI indictor, which secure more profits and entering trades before the current price bar formed allow the best entry";
 				Name = "CCIWithPreditionEntry";
 				Calculate = Calculate.OnBarClose;
-				EntriesPerDirection	= 1;
+				EntriesPerDirection = 1;
 				EntryHandling = EntryHandling.AllEntries;
 				IsExitOnSessionCloseStrategy = true;
 				ExitOnSessionCloseSeconds = 30;
@@ -65,7 +65,7 @@ namespace NinjaTrader.NinjaScript.Strategies{
 				Slippage = 0;
 				StartBehavior = StartBehavior.WaitUntilFlat;
 				TimeInForce = TimeInForce.Gtc;
-				TraceOrders	= false;
+				TraceOrders = false;
 				RealtimeErrorHandling = RealtimeErrorHandling.StopCancelClose;
 				StopTargetHandling = StopTargetHandling.PerEntryExecution;
 				BarsRequiredToTrade = 5;
@@ -94,7 +94,7 @@ namespace NinjaTrader.NinjaScript.Strategies{
 					double swingHighPrice = High[swingHighBar];
 					if (swingHighPrice < lastHighPrice && isUp==0 && lastHighBar > -1){isUp = -1;}
 					else if(swingHighPrice > lastHighPrice && isUp==-1 && lastHighBar > -1){isUp=0;}
-					lastHighBar	= CurrentBar - swingHighBar;
+					lastHighBar = CurrentBar - swingHighBar;
 					lastHighPrice = swingHighPrice;
 				}
 				//Last swing low is lower than the most recent swing low, which means market is trending up
@@ -103,7 +103,7 @@ namespace NinjaTrader.NinjaScript.Strategies{
 					double swingLowPrice = Low[swingLowBar];
 					if (swingLowPrice > lastLowPrice && isUp==0 && lastLowBar > -1){isUp = 1;}
 					else if (swingLowPrice < lastLowPrice && isUp==1 && lastLowBar > -1){isUp=0;}
-					lastLowBar	= CurrentBar - swingLowBar;
+					lastLowBar = CurrentBar - swingLowBar;
 					lastLowPrice = swingLowPrice;
 				}
 				if(Close[0]>lastHighPrice && isUp == -1){isUp = 1; }
