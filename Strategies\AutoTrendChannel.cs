@@ -1,5 +1,5 @@
 /*
-This is an algorithm determines market trends channels and plot them on the chart. Which shows the current market trend, and potentially future market trend, and potential price bouncing off the trend channel.
+This is an algorithm determines market trends channels and plot them on the chart. Which shows the current market trend bias, potential future market trend, and potential price bouncing off the trend channel.
 This algorithm can be used for optimizing a trading bot, by assisting the strategy to make trading decision that is favouring the market trend.
 Trading with the market trend would increase probability of successful trades.
 */
