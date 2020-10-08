@@ -1,5 +1,5 @@
 # Algorithmic-Trading-Bot
-Day trading requires a lot of emotional control and disciplines. Traders often have to think fast and make quick decisions while an entry setup is available. When a trader isn't able to contain their emotion, these emotion would usually impact their decision making and causing them to enter trades that aren't the best setup.
+Day trading requires a lot of emotional control and disciplines. Traders often have to think fast and make quick decisions while an entry setup is available. When a trader isn't able to contain their emotion, these emotion would usually impact their decision making and causing them to enter trades that aren't the best setups.
 
 This project was inspired through personally experiencing multiple unfavourable trades and realizing the need for a better method to make quicker decision, accuratly spotting setups, and eliminating emotions.
 
@@ -8,6 +8,9 @@ Design and developed 3 different algorithmic trading bots with different setups,
 ## Usage
 The trading bots are built based on the Ninjatrader trading platform. To use the trading bots, a brokerage that is compatible with Ninjatrader is required, and the file must be used within the Ninjatrader platform. 
 
+## Challenges
+This project was one of the most interesting project that I have done. It was a very fulfilling time but frustrating, especially when you thought you would've made great progress on an algorithmic trading bot, but only to find it was not profitable. Due to this reason, I was able to come up with loads of different variation of bots. The trading bots within this repository are backtest and shown profitable, the AntiClimax trading bot had the highest win rate.
+
 ## Files
 There are 3 different strategy and an algorithm
 ***More in depth explaination in each trading bot files***
@@ -15,9 +18,6 @@ There are 3 different strategy and an algorithm
 * mypointstrates - This trading bot uses the two legged pull back pattern with the Autotrendchannel's algorithm for trading with trade bias.
 * Anticlimax(on going) - This trading bot use the anticlimax pattern, which focus price exhaustion trading.
 * AutoTrendChannels - An algorithm algorithm that determines market bias, and find the most suitable trends channels, when implemented into trading bot that focus on trading with market bias, it would increase probability of winning trades while filtering bad trades.
-
-## Challenges
-This project was one of the most interesting project that I have done. It was a very fulfilling time but frustrating, especially when you thought you would've made great progress on an algorithmic trading bot, but only to find it was not profitable. Due to this reason, I was able to come up with loads of different variation of bots. The trading bots within this repository are backtest and shown profitable, the AntiClimax trading bot had the highest win rate.
 
 ## On going 
 Currently completing AntiClimax trading bot, still need to implement
