@@ -26,11 +26,14 @@ using NinjaTrader.NinjaScript.DrawingTools;
 namespace NinjaTrader.NinjaScript.Strategies{
 	public class mypointstrate : Strategy{
 		
-		private bool LongSetup = false;
 		private double LongLimitLine;
-		private bool ShortSetup = false;
 		private double ShortLimitLine;
-
+ 		private double Accountsize;
+		private Order myEntryOrder = null;
+		
+		/// <summary>
+		/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		/// </summary>
 		private bool Congestion = false;
 		private int Congestion_Count = 0;
 
@@ -38,56 +41,59 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		private double Top_Con;
 		private double Bot_Con;
 
-		private bool temp_drawshort = false;
-		private bool temp_drawlong = false;
-		private int temp_shortbar;
-		private int temp_longbar;
-
-		private double[] my_index = {1,1.5, 2, 2.5, 3, 4, 5, 6, 7, 8};
-
-
-
-
 		protected override void OnStateChange(){
 			if (State == State.SetDefaults){
-				Description									= @"My strategy2";
-				Name										= "mypointstrate";
-				Calculate									= Calculate.OnBarClose;
-				EntriesPerDirection							= 1;
-				EntryHandling								= EntryHandling.AllEntries;
-				IsExitOnSessionCloseStrategy				= true;
-				ExitOnSessionCloseSeconds					= 30;
-				IsFillLimitOnTouch							= false;
-				MaximumBarsLookBack							= MaximumBarsLookBack.TwoHundredFiftySix;
-				OrderFillResolution							= OrderFillResolution.Standard;
-				Slippage									= 0;
-				StartBehavior								= StartBehavior.WaitUntilFlat;
-				TimeInForce									= TimeInForce.Gtc;
-				TraceOrders									= false;
-				RealtimeErrorHandling						= RealtimeErrorHandling.StopCancelClose;
-				StopTargetHandling							= StopTargetHandling.PerEntryExecution;
-				BarsRequiredToTrade							= 3;
-				
-				// Disable this property for performance gains in Strategy Analyzer optimizations
-				// See the Help Guide for additional information
-				IsInstantiatedOnEachOptimizationIteration	= true;
+				Description = @"My strategy2";
+				Name = "mypointstrate";
+				Calculate = Calculate.OnBarClose;
+				AccountName = "Sim101";
+				Percent = 2;
+				ContractMargin = 990;
+				ContractTickPrice = 50;
+				EntriesPerDirection = 1;
+				EntryHandling = EntryHandling.AllEntries;
+				IsExitOnSessionCloseStrategy = true;
+				ExitOnSessionCloseSeconds = 30;
+				IsFillLimitOnTouch = false;
+				MaximumBarsLookBack = MaximumBarsLookBack.TwoHundredFiftySix;
+				OrderFillResolution = OrderFillResolution.Standard;
+				Slippage = 0;
+				StartBehavior = StartBehavior.WaitUntilFlat;
+				TimeInForce = TimeInForce.Gtc;
+				TraceOrders = false;
+				RealtimeErrorHandling = RealtimeErrorHandling.StopCancelClose;
+				StopTargetHandling = StopTargetHandling.PerEntryExecution;
+				BarsRequiredToTrade = 3;
+				IsInstantiatedOnEachOptimizationIteration = true;
 			}
 			else if (State == State.Configure){ //called after user apply the strategy
 				AddDataSeries("ES 09-20", Data.BarsPeriodType.Minute, 5);
-				
-				//SetProfitTarget(CalculationMode.Ticks, 20);
-				//SetStopLoss(CalculationMode.Ticks, 12);
+				Account a = Account.All.First(t => t.name == AccountName);
+				Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
 			}
 			else if (State == State.DataLoaded){ //Called after data has been loaded
 				AddChartIndicator(CCI(14));
 			}
 		}
 
+		
+		protected override void OnOrderUpdate(Order order, double limitPrice, double stopPrice, int quantity, int filled, double averageFillPrice, OrderState orderState, DateTime time, ErrorCode error, string nativeError){
+			if(order.Name == "Long Entry" || order.Name == "Short Entry")
+				myEntryOrder = order;
+			if(myEntryOrder != null && myEntryOrder == order){
+				if (myEntryOrder.OrderState == OrderState.Cancelled){
+					myEntryOrder = null;
+				}
+			}	
+		}
+
 		protected override void OnBarUpdate(){
 			if (BarsInProgress == 0){
 				if(CurrentBar < BarsRequiredToTrade){return;}
 
-				if(Close[0]>=Low[ 1] && Close[0]<=High[ 1]){
+			/*--------------------------------------------------------------------------------------------------------------*/
+				
+				if(Close[0]>=Low[1] && Close[0]<=High[1]){
 					Congestion_Count++; //3
 					if(Congestion_Count>=3){
 						Top_Con = Close[0];
@@ -106,109 +112,54 @@ namespace NinjaTrader.NinjaScript.Strategies{
 						Congestion = false;
 					}
 				}
+					
+			/*--------------------------------------------------------------------------------------------------------------*/
+				
+				if(myEntryOrder!=null && myEntryOrder.Name == "Short Entry" && Low[0]>ShortLimitLine)
+					CancelOrder(myEntryOrder); 
+				if(myEntryOrder!=null && myEntryOrder.Name == "Long Entry" && High[0]<LongLimitLine)
+					CancelOrder(myEntryOrder);
 
-				//bullish momentum - as price bar bottom clearing above the last swing high 
-
-
-				if(ShortSetup && Low[0]>ShortLimitLine){ShortSetup = false;}
-				if(LongSetup && High[0]<LongLimitLine){LongSetup = false;} //cancel limit order 
-
-				if(High[0]-High[1 ]>High[ 1]-High[2] && High[ 1]-High[2]>High[2]-High[3] && High[2]-High[3]>0){
+				if(High[0]-High[1]>High[1]-High[2] && High[1]-High[2]>High[2]-High[3] && High[2]-High[3]>0){
+		
 					Draw.Square(this, "Setup High"+ CurrentBar, true, 0, High[0]+2, Brushes.White);
-					ShortSetup = true;
-					ShortLimitLine = High[0];
-					temp_drawshort = false;
-					temp_shortbar = 0;
+				
+					ShortLimitLine = High[0] + TickSize;
+					int quantity = Accountsize*0.01*Percent/((ShortLimitLine-Low[0]+TickSize)*ContractTickPrice);
+					if(quantity>=0.8){
+						//SetProfitTarget(CalculationMode.Price, 1.5* 4*TickSize * ShortLimitLine-Low[0]+TickSize);
+						//SetStopLoss(CalculationMode.Price, ShortLimitLine);
+						EnterShortStopMarket((quantity<1) ? 1 : (int)Math.Floor(quantity),Low[0]-TickSize, "Short Entry");
+					}
 				}
-				//else if(ShortSetup){
-				//	if(Close[0]-Open[0]<0){// going down 
-				if(ShortSetup){
-					if(Close[0]-Open[0]<0&&temp_shortbar==0){temp_shortbar = CurrentBar;}
-					else if(Low[0]<=Low[CurrentBar - temp_shortbar]-0.25 && temp_shortbar!=0){ 
-						if(!temp_drawshort){
-							int temp_holder = CurrentBar - temp_shortbar;
-							Draw.Rectangle(this, "Rectangle down 1 " + CurrentBar, false, 1, High[temp_holder]+0.25, -30, Low[temp_holder]-0.25, Brushes.Red, Brushes.Red, 3);
-							Draw.Rectangle(this, "Rectangle down 2 " + CurrentBar, false, 1, Low[temp_holder]-0.25, -30, Low[temp_holder]-0.25-9*(High[temp_holder]-Low[temp_holder]+2*0.25), Brushes.PaleGreen, Brushes.PaleGreen, 3);
-							Draw.Line(this, "Line down" + CurrentBar, false, 1, Low[temp_holder]-0.25, -30, Low[temp_holder]-0.25, Brushes.Black, DashStyleHelper.Solid, 2);
-							foreach (var item in my_index){
-								Draw.Line(this, "Line down "+ item + " " + CurrentBar, false, 1, Low[temp_holder]-0.25-item*(High[temp_holder]-Low[temp_holder]+0.5), -30, Low[temp_holder]-0.25-item*(High[temp_holder]-Low[temp_holder]+0.5), Brushes.Black, DashStyleHelper.Solid, 2);
-							}
-						}
-						temp_drawshort = true;
-					}//limit order submit; set stoploss + 1tick}
+				if(Low[0]-Low[1]<Low[1]-Low[2] && Low[1]-Low[2]<Low[2]-Low[3] && Low[2]-Low[3]<0){
 
-				}
-
-				if(Low[0]-Low[1 ]<Low[1 ]-Low[2] && Low[ 1]-Low[2]<Low[2]-Low[3] && Low[2]-Low[3]<0){
 					Draw.Square(this, "Setup Low"+ CurrentBar, true, 0, Low[0]-2, Brushes.White);
-					LongSetup = true; 
-					LongLimitLine = Low[0];
-					temp_drawlong = false;
-					temp_longbar = 0;
-				}
-				if(LongSetup){
-					if(Close[0]-Open[0]>0&&temp_longbar==0){temp_longbar=CurrentBar;}
-					else if(High[0]>=High[CurrentBar - temp_longbar]+0.25  && temp_longbar!=0){
-						if(!temp_drawlong){
-							int temp_holder = CurrentBar - temp_longbar;
-							Draw.Rectangle(this, "Rectangle up 1 " + CurrentBar, false, 1, High[temp_holder]+0.25, -30, Low[temp_holder]-0.25, Brushes.Red, Brushes.Red, 3);
-							Draw.Rectangle(this, "Rectangle up 2 " + CurrentBar, false, 1,	High[temp_holder]+0.25 + 9*(High[temp_holder]-Low[temp_holder]+2*0.25), -30, High[temp_holder]+0.25, Brushes.PaleGreen, Brushes.PaleGreen, 3);
-							Draw.Line(this, "Line up " + CurrentBar, false, 1, High[temp_holder]+0.25, -30, High[temp_holder]+0.25, Brushes.Black, DashStyleHelper.Solid, 2);
-							foreach (var item in my_index){
-								Draw.Line(this, "Line up " + item+ " " + CurrentBar, false, 1, High[temp_holder]+0.25+item*(High[temp_holder]-Low[temp_holder]+2*0.25), -30, High[temp_holder]+0.25+item*(High[temp_holder]-Low[temp_holder]+2*0.25), Brushes.Black, DashStyleHelper.Solid, 2);
-							}
-						}
-						temp_drawlong = true;
-					}//Limit order submit; set stoploss + 1tick}
+
+					LongLimitLine = Low[0]-TickSize;
+					int quantity = Accountsize*0.01*Percent/((High[0]-LongLimitLine+TickSize)*ContractTickPrice);
+					if(quantity>=0.8){
+						EntryLongStopMarket((quantity<1) ? 1 : (int)Math.Floor(quantity),High[0]+TickSize, "Long Entry");
+					}
 				}
 				//might have to look into trabar 
 
 				//bullish momentum - as price bar bottom clearing above the last swing high 
 					//use this as indicator for trend, 
 				//swing(3)
-				//if there are multiple green bar, you might want to wait for a stronger intrabar signal for confirmation 
 				//can use anti climax as a exit signal, example if the anti climax formed in the bearish direction (about to reverse upwards) and you have an open position in the bear side, you can exit the position once it's formed 
 				//price high unable to clear the last swing low - up
 				//price low unable to clear the last swing high - down
-
-				//price congestion - support and resistance 
-				//as long as the bar closes within the range of the previous bar's highs and lows, we consider it's congesting 
-				//when at least three consecutive bars close within the range of their respecitive preceding bar  
-				/*
-						 1		2	3
-				    |    |		|	|
-					[]	 []		[]  []
-					|    |		|   |
-				*/
-				//highest close(3) and lowest close(1) - congesting zone 
-
 				//if anti climax formed on bear side a few bars ago and failed then formed again most likely its gonna fail again 
-				//if stop loss is hit but not clear limit line can consider reentering
+
 				//you can use the anti climax to find the market bias, for example if a limit line is cleared, it shows that the market is going in that direction still hence strong market 
 				//in a up trend if the anti climax going towards the short side is very strong, meaning that there might be a trend change, hence if theres a setup for going to the bull side, dont take it cus its risky 
-				//use signs of price congestion to take your profit.
 			}
 
 			/*
-			may get into "vriable risk" sizing when include support and resistance 
-			lots of small loss, a big win
-			stoploss behind lower lowers and higher low etc 
-			//or 3 atr and close position when closed below it
-			use HL,LH,LL,HH
-
-			1:1 profit - one profit target, running stoploss at ent
 
 
-
-			1:1 50% +
-			4:1 20% +
-			
-			4 + 4 - 1 - 1 - 1 -1 -1 -1 -1 -1  
-
-
-			take 25 percent off the trade when the trade reaches 1 times the resk and will move the stoploss to break even 
-
-			able to accept 10 consecutive trades losses, 
+			able to accept 10 consecutive trades losses7
 			10 consecutive losses should not exceed a total 25 percent drawdown, 
 			no more than 1- 2 percent of the portfolio should be put at risk 
 			find amount of contracts based on /\
@@ -225,14 +176,24 @@ namespace NinjaTrader.NinjaScript.Strategies{
 			
 			*exit when another trade is forming in the opposite side and give that trade setup a try
 			*dont reenter after filling a setup 
-			*dont enter more than x times with a same setup 
-			*maybe check with in trend trades
 			*/
 			else{return;}		
 		}
 		#region Helpers
 
 		#endregion
+		
+		[Range(1, int.MaxValue), NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Account Name", GroupName = "NinjaScriptParameters", Order = 0)]
+		public string AccountName { get; set; }
+		[Range(1, 100), NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Percent", GroupName = "NinjaScriptParameters", Order = 1)]
+		public int Percent { get; set; }
+		[Range(1, int.MaxValue), NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Contract Margin", GroupName = "NinjaScriptParameters", Order = 2)]
+		public int ContractMargin { get; set; }
+		[Range(1, int.MaxValue), NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Contract Tick Price", GroupName = "NinjaScriptParameters", Order = 3)]
+		public int ContractTickPrice { get; set; }
 	}
 }
-
