@@ -30,10 +30,8 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		private double ShortLimitLine;
  		private double Accountsize;
 		private Order myEntryOrder = null;
-		
-		/// <summary>
-		/// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-		/// </summary>
+		private bool AllowEntry = true;
+
 		private bool Congestion = false;
 		private int Congestion_Count = 0;
 
@@ -43,12 +41,12 @@ namespace NinjaTrader.NinjaScript.Strategies{
 
 		protected override void OnStateChange(){
 			if (State == State.SetDefaults){
-				Description = @"My strategy2";
-				Name = "mypointstrate";
+				Description = "This trading bot is using the Anti Climax market pattern, where it trade based on price reversal/price exhaution. This trading bot also included risk management.";
+				Name = "AntiClimax";
 				Calculate = Calculate.OnBarClose;
-				AccountName = "Sim101";
-				Percent = 2;
-				ContractMargin = 990;
+				Instrumental = "ES 09-20";
+				AccountName = "Playback101";
+				Percent = 1.5;
 				ContractTickPrice = 50;
 				EntriesPerDirection = 1;
 				EntryHandling = EntryHandling.AllEntries;
@@ -67,8 +65,8 @@ namespace NinjaTrader.NinjaScript.Strategies{
 				IsInstantiatedOnEachOptimizationIteration = true;
 			}
 			else if (State == State.Configure){ //called after user apply the strategy
-				AddDataSeries("ES 09-20", Data.BarsPeriodType.Minute, 5);
-				Account a = Account.All.First(t => t.name == AccountName);
+				AddDataSeries(Instrumental, Data.BarsPeriodType.Minute, 5);
+				Account a = Account.All.First(t => t.Name == AccountName);
 				Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
 			}
 			else if (State == State.DataLoaded){ //Called after data has been loaded
@@ -78,6 +76,10 @@ namespace NinjaTrader.NinjaScript.Strategies{
 
 		
 		protected override void OnOrderUpdate(Order order, double limitPrice, double stopPrice, int quantity, int filled, double averageFillPrice, OrderState orderState, DateTime time, ErrorCode error, string nativeError){
+			Account a = Account.All.First(t => t.Name == AccountName);
+			double CurrentAccountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
+			if(Accountsize-CurrentAccountsize>=Percent*0.03*Accountsize)
+				AllowEntry = false;
 			if(order.Name == "Long Entry" || order.Name == "Short Entry")
 				myEntryOrder = order;
 			if(myEntryOrder != null && myEntryOrder == order){
@@ -90,7 +92,13 @@ namespace NinjaTrader.NinjaScript.Strategies{
 		protected override void OnBarUpdate(){
 			if (BarsInProgress == 0){
 				if(CurrentBar < BarsRequiredToTrade){return;}
-
+				if(ToTime(Time[1]) <= 240000 && ToTime(Time[0]) >= 0){
+					AllowEntry = true;
+					Account a = Account.All.First(t => t.Name == AccountName);
+				    Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
+				}
+				if(!AllowEntry){return;}
+				
 			/*--------------------------------------------------------------------------------------------------------------*/
 				
 				if(Close[0]>=Low[1] && Close[0]<=High[1]){
@@ -125,11 +133,16 @@ namespace NinjaTrader.NinjaScript.Strategies{
 					Draw.Square(this, "Setup High"+ CurrentBar, true, 0, High[0]+2, Brushes.White);
 				
 					ShortLimitLine = High[0] + TickSize;
-					int quantity = Accountsize*0.01*Percent/((ShortLimitLine-Low[0]+TickSize)*ContractTickPrice);
-					if(quantity>=0.8){
-						//SetProfitTarget(CalculationMode.Price, 1.5* 4*TickSize * ShortLimitLine-Low[0]+TickSize);
-						//SetStopLoss(CalculationMode.Price, ShortLimitLine);
-						EnterShortStopMarket((quantity<1) ? 1 : (int)Math.Floor(quantity),Low[0]-TickSize, "Short Entry");
+					double EntryLine = Low[0]-TickSize;
+					double quantity = Accountsize*0.01*Percent/((ShortLimitLine-EntryLine)*ContractTickPrice);
+					if(Position.MarketPosition == MarketPosition.Flat){
+						if(ToTime(Time[0]) >= 73000 && ToTime(Time[0]) <= 155900){
+							if(quantity>=0.75){
+								SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundToTickSize(1.5*(EntryLine-(ShortLimitLine-EntryLine))));
+								SetStopLoss(CalculationMode.Price, ShortLimitLine);
+								EnterShortStopMarket((int)Math.Round(quantity),EntryLine, "Short Entry");
+							}
+						}
 					}
 				}
 				if(Low[0]-Low[1]<Low[1]-Low[2] && Low[1]-Low[2]<Low[2]-Low[3] && Low[2]-Low[3]<0){
@@ -137,9 +150,16 @@ namespace NinjaTrader.NinjaScript.Strategies{
 					Draw.Square(this, "Setup Low"+ CurrentBar, true, 0, Low[0]-2, Brushes.White);
 
 					LongLimitLine = Low[0]-TickSize;
-					int quantity = Accountsize*0.01*Percent/((High[0]-LongLimitLine+TickSize)*ContractTickPrice);
-					if(quantity>=0.8){
-						EntryLongStopMarket((quantity<1) ? 1 : (int)Math.Floor(quantity),High[0]+TickSize, "Long Entry");
+					double EntryLine = High[0]+TickSize;
+					double quantity = Accountsize*0.01*Percent/((EntryLine-LongLimitLine)*ContractTickPrice);
+					if(Position.MarketPosition == MarketPosition.Flat){
+						if(ToTime(Time[0]) >= 73000 && ToTime(Time[0]) <= 155900){
+							if(quantity>=0.75){
+								SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundDownToTickSize(1.5*(EntryLine+(EntryLine-LongLimitLine))));
+								SetStopLoss(CalculationMode.Price, LongLimitLine);
+								EnterLongStopMarket((int)Math.Round(quantity),EntryLine, "Long Entry");
+							}
+						}	
 					}
 				}
 				//might have to look into trabar 
@@ -179,19 +199,16 @@ namespace NinjaTrader.NinjaScript.Strategies{
 			*/
 			else{return;}		
 		}
-		#region Helpers
-
-		#endregion
 		
-		[Range(1, int.MaxValue), NinjaScriptProperty]
-		[Display(ResourceType = typeof(Custom.Resource), Name = "Account Name", GroupName = "NinjaScriptParameters", Order = 0)]
+		[NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Instrumental", GroupName = "NinjaScriptParameters", Order = 0)]
+		public string Instrumental { get; set; }
+		[NinjaScriptProperty]
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Account Name", GroupName = "NinjaScriptParameters", Order = 1)]
 		public string AccountName { get; set; }
 		[Range(1, 100), NinjaScriptProperty]
-		[Display(ResourceType = typeof(Custom.Resource), Name = "Percent", GroupName = "NinjaScriptParameters", Order = 1)]
-		public int Percent { get; set; }
-		[Range(1, int.MaxValue), NinjaScriptProperty]
-		[Display(ResourceType = typeof(Custom.Resource), Name = "Contract Margin", GroupName = "NinjaScriptParameters", Order = 2)]
-		public int ContractMargin { get; set; }
+		[Display(ResourceType = typeof(Custom.Resource), Name = "Percent", GroupName = "NinjaScriptParameters", Order = 2)]
+		public double Percent { get; set; }
 		[Range(1, int.MaxValue), NinjaScriptProperty]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Contract Tick Price", GroupName = "NinjaScriptParameters", Order = 3)]
 		public int ContractTickPrice { get; set; }
