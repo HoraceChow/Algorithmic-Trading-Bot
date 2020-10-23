@@ -19,6 +19,8 @@ For more information regarding some of the function that are used in the trading
 ***DISCLAIMER: There is a risk of loss in forex, futures and options trading. Please be advise before use.***
 
 ## AntiClimax Trading Bot 
+This trading bot is featured becuase it had the highest win rate, and features implemented such as risk management, risk to reward ratio, daily stoploss and more.
+
 When the market is falling/raising with strong momentum, evenutally price begin to exhaustion and reverse in the opposite direction. The Anti climax pattern focus on trading price exchastion and indicate potential market reversal. The requirements for a long setup anticlimax pattern are a mirror to the short setup anticlimax pattern.
 
 ### Setup:
