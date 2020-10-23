@@ -38,15 +38,19 @@ The 3rd bar's low of the setup serves as a limit line. While the setup has not b
 ![122557251_4584259951615388_3148439151456043905_n](https://user-images.githubusercontent.com/46755190/97043255-26eba600-1540-11eb-8b7b-651ea90adb2b.png)
 
 ### Features:
-  * ***Risk management*** - To ensure a single losing trade does not fully bankrup the account's capital. It is suggested that each trades should only risk 1% to 2% of the account size. The trading bot is implemented with risk management of each trades only risk 1.5% of the account's capital.
+  * ***Risk management*** 
+  
+  To ensure a single losing trade does not fully bankrup the account's capital. It is suggested that each trades should only risk 1% to 2% of the account size. The trading bot is implemented with risk management of each trades only risking 1.5% of the account's capital.
   
   * ***1:1.5 Risk to reward ratio*** 
   
     ![122239327_787158372135874_6754269603419990388_n (2)](https://user-images.githubusercontent.com/46755190/97047804-826d6200-1547-11eb-9e2f-df30f28a8f21.jpg)
 
-    Through backtesting over 100 trades, it was shown that the Anticlimax trading bot had a 47% with rate with 1:1.5 risk to reward ratio, each trade uses 1.5% of account size. Theoretically it has a 26.25% gain over 100 trades, and the trading bot was about to fill 100 trades over 3 weeks of day trading.
+    Through backtesting over 100 trades, it was shown that the Anticlimax trading bot had a 47% with rate with 1:1.5 risk to reward ratio, each trade uses 1.5% of account size. Theoretically it has a 26.25% gain over 100 trades, and the trading bot was about to complete 100 trades over 4 weeks of day trading.
   
-  * ***Daily stoploss*** - By implementing a daily stoploss, it could help preserving capital during a bad trading day. The maximum amount of account lost allow for each trading day is 4.5% of the account size. 
+  * ***Daily stoploss*** 
+  
+  By implementing a daily stoploss, it could help preserving capital during a bad trading day. The maximum amount of account lost allow for each trading day is 4.5% of the account size. 
 
 
 ### Files
