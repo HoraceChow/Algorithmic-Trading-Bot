@@ -52,7 +52,7 @@ When the market is falling/raising with strong momentum, evenutally price begin 
 
 
 ### Files
-There are 3 different strategy and an algorithm
+There are 3 different trading bot and an algorithm, all trading bots have different strategies and uses different indicators as such.
 ***More in depth explaination in each trading bot files***
 * CCIWithPreditionEntry - This trading bot estimate the CCI value and enter trades based on the value crossover on CCI=100 or CCI=-100.
 * mypointstrates - This trading bot uses the two legged pull back pattern with the Autotrendchannel's algorithm for trading with trade bias.
