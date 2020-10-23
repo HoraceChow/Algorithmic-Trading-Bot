@@ -100,7 +100,7 @@ namespace NinjaTrader.NinjaScript.Strategies{
 				if(CurrentBar < BarsRequiredToTrade){return;} 
 				
 				//Runs when day changed
-				if(ToDay(Time[1]) != ToDay(Time[0])){ //If the previous and current bar does not have equal time
+				if(ToDay(Time[1]) != ToDay(Time[0])){ //If the previous and current bar does not have equal date
 					a = Account.All.First(t => t.Name == AccountName); //Update account size
 					Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
 					AllowEntry = true; 
