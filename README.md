@@ -21,20 +21,23 @@ When the market is falling/raising with strong momentum, evenutally price begin 
 
 ### Setup:
 ![Screenshot (15)](https://user-images.githubusercontent.com/46755190/97039808-ffdea580-153a-11eb-9411-f6d9223b4d8c.png)
+
 Firstly, 3 consective bar are needed to be lower than the previous bar's low with an increasing distances. Each range(A,B,C) will get progressivly larger. This will show the rapid downward move in the market and potential price exhaustion.
 
 ![Screenshot (16)](https://user-images.githubusercontent.com/46755190/97041698-decb8400-153d-11eb-9f4d-d216d193a880.png)
+
 Once the setup has been formed, wait for the next Green bar to form, it does not have to be the bar after the setup! When it appears like it have shown above, place a Buy market stop order 1 tick above the bar's high, and a stoploss 1 tick below the bar's low.
 If the 3rd bar of the setup is a green bar, the stoploss and Buy market stop order can be placed on the 3rd bar's low and bar's high.
 
 ![Screenshot (17)](https://user-images.githubusercontent.com/46755190/97042354-e63f5d00-153e-11eb-8e81-dce58f613d22.png)
+
 The 3rd bar's low of the setup serves as a limit line. While the setup has not been filled yet, any bar's high is below the limit line, the setup becomes invaild and no longer considered. The anticlimax pattern is essentially a power price thrust, there is a possibility that this price thrust will continue. If it continue, the limit line will be broken, proven that the setup is invaild and possiblily not reversing in price.
 
-### Here it is in action
+### Here it is in action:
 
 ![122557251_4584259951615388_3148439151456043905_n](https://user-images.githubusercontent.com/46755190/97043255-26eba600-1540-11eb-8b7b-651ea90adb2b.png)
 
-### Features
+### Features:
   * ***Risk management*** - To ensure a single losing trade does not fully bankrup the account's capital. It is suggested that each trades should only risk 1% to 2% of the account size. The trading bot is implemented with risk management of each trades only risk 1.5% of the account's capital.
   
   * ***1:1.5 Risk to reward ratio*** 
