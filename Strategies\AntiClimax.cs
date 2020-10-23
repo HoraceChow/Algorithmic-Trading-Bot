@@ -1,3 +1,8 @@
+/*
+This is the most effecient and highest probability trading bot out of the list. 
+
+This is trading bot uses the anticlimx market pattern, a visual explaination could be viewed on github.com/HoraceChow/Algorithmic-Trading-Bot
+*/
 #region Using declarations
 using System;
 using System.Collections.Generic;
@@ -24,31 +29,26 @@ using NinjaTrader.NinjaScript.DrawingTools;
 
 //This namespace holds Strategies in this folder and is required. Do not change it. 
 namespace NinjaTrader.NinjaScript.Strategies{
-	public class mypointstrate : Strategy{
+	public class AntiClimax : Strategy{
 		
 		private double LongLimitLine;
+		private bool LongSetup = false;
 		private double ShortLimitLine;
+		private bool ShortSetup = false;
  		private double Accountsize;
 		private Order myEntryOrder = null;
 		private bool AllowEntry = true;
 
-		private bool Congestion = false;
-		private int Congestion_Count = 0;
-
-		private Rectangle myRec;
-		private double Top_Con;
-		private double Bot_Con;
-
 		protected override void OnStateChange(){
 			if (State == State.SetDefaults){
-				Description = "This trading bot is using the Anti Climax market pattern, where it trade based on price reversal/price exhaution. This trading bot also included risk management.";
+				Description = @"Trading using the AntiClimax Pattern";
 				Name = "AntiClimax";
 				Calculate = Calculate.OnBarClose;
-				Instrumental = "ES 09-20";
-				AccountName = "Playback101";
-				Percent = 1.5;
-				ContractTickPrice = 50;
-				EntriesPerDirection = 1;
+				Instrumental = "ES 09-20";  //Trading the S&P500 futures instrumental
+				AccountName = "Playback101"; //Using backtesting account
+				Percent = 1.5; //Each trade would be consistance and use 1.5% of overall account size 
+				ContractTickPrice = 50; //Each Point in the S&P500 = 50 USD dollars 
+				EntriesPerDirection = 1; 
 				EntryHandling = EntryHandling.AllEntries;
 				IsExitOnSessionCloseStrategy = true;
 				ExitOnSessionCloseSeconds = 30;
@@ -64,142 +64,138 @@ namespace NinjaTrader.NinjaScript.Strategies{
 				BarsRequiredToTrade = 3;
 				IsInstantiatedOnEachOptimizationIteration = true;
 			}
-			else if (State == State.Configure){ //called after user apply the strategy
-				AddDataSeries(Instrumental, Data.BarsPeriodType.Minute, 5);
-				Account a = Account.All.First(t => t.Name == AccountName);
+			else if (State == State.Configure){ //called after User applying the trading bot
+				AddDataSeries(Instrumental, Data.BarsPeriodType.Minute, 5); //adding data instrumental
+				
+				//Attaining Account size
+				Account a = Account.All.First(t => t.Name == AccountName); 
 				Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
 			}
 			else if (State == State.DataLoaded){ //Called after data has been loaded
 				AddChartIndicator(CCI(14));
 			}
 		}
-
+		//Runs whenever an order has been entered, each profit target, or hit stop loss
+		protected override void OnExecutionUpdate(Execution execution, string executionId, double price, int quantity, MarketPosition marketPosition, string orderId, DateTime time){
+			if(execution.Order.Name == "Profit target" || execution.Order.Name == "Stop loss")
+				myEntryOrder = null; //Removing myEntryOrder for reference
+		}
 		
+		//Runs whenever an order statues has been updated
 		protected override void OnOrderUpdate(Order order, double limitPrice, double stopPrice, int quantity, int filled, double averageFillPrice, OrderState orderState, DateTime time, ErrorCode error, string nativeError){
-			Account a = Account.All.First(t => t.Name == AccountName);
-			double CurrentAccountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
-			if(Accountsize-CurrentAccountsize>=Percent*0.03*Accountsize)
-				AllowEntry = false;
+			//Initalizing Reference of Order
 			if(order.Name == "Long Entry" || order.Name == "Short Entry")
 				myEntryOrder = order;
+			
+			//Removing myEntryOrder reference once order has been cancelled
 			if(myEntryOrder != null && myEntryOrder == order){
-				if (myEntryOrder.OrderState == OrderState.Cancelled){
+				if (myEntryOrder.OrderState == OrderState.Cancelled)
 					myEntryOrder = null;
-				}
 			}	
 		}
 
+		//Runs each time a new bar is formed
 		protected override void OnBarUpdate(){
-			if (BarsInProgress == 0){
-				if(CurrentBar < BarsRequiredToTrade){return;}
-				if(ToTime(Time[1]) <= 240000 && ToTime(Time[0]) >= 0){
-					AllowEntry = true;
-					Account a = Account.All.First(t => t.Name == AccountName);
-				    Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
-				}
-				if(!AllowEntry){return;}
+			if (BarsInProgress == 0){ //Runs every 5 mins, since bar type is set to 5 mins
+				if(CurrentBar < BarsRequiredToTrade){return;} 
 				
-			/*--------------------------------------------------------------------------------------------------------------*/
-				
-				if(Close[0]>=Low[1] && Close[0]<=High[1]){
-					Congestion_Count++; //3
-					if(Congestion_Count>=3){
-						Top_Con = Close[0];
-						Bot_Con = Close[0];
-						for(int i=1;i<Congestion_Count;i++){
-							if(Close[i]>Top_Con){Top_Con = Close[i];}
-							if(Close[i]<Bot_Con){Bot_Con = Close[i];}
-						}
-						myRec = Draw.Rectangle(this, "Rectangle" + (CurrentBar-Congestion_Count-1), false, Congestion_Count-1, Top_Con, -30, Bot_Con, Brushes.White, Brushes.White, 3);
-						Congestion = true;
-					}//resize the zone if possible, and add it to the linked list, Congestion = true;}
+				//Runs when day changed
+				if(ToDay(Time[1]) != ToDay(Time[0])){ //If the previous and current bar does not have equal time
+					a = Account.All.First(t => t.Name == AccountName); //Update account size
+					Accountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
+					AllowEntry = true; 
+					ShortSetup = false;
+					LongSetup = false;
 				}
-				else{
-					Congestion_Count = 0;
-					if(Congestion && (Close[0]>Top_Con || Close[0]<Bot_Con)){ //&& close outside the zone){
-						Congestion = false;
-					}
-				}
-					
-			/*--------------------------------------------------------------------------------------------------------------*/
-				
-				if(myEntryOrder!=null && myEntryOrder.Name == "Short Entry" && Low[0]>ShortLimitLine)
-					CancelOrder(myEntryOrder); 
-				if(myEntryOrder!=null && myEntryOrder.Name == "Long Entry" && High[0]<LongLimitLine)
-					CancelOrder(myEntryOrder);
 
+				//Setting daily stoploss, lossing no more than specify percent per day.
+				Account a = Account.All.First(t => t.Name == AccountName);
+				double CurrentAccountsize = a.Get(AccountItem.CashValue, Currency.UsDollar);
+				if(Accountsize-CurrentAccountsize>=Percent*0.03*Accountsize)
+					AllowEntry = false;
+			
+				//Daily stoploss
+				if(!AllowEntry)
+					return;
+
+				//Cancel Order once Short setup is no longer vaild
+				if((ShortSetup || (myEntryOrder!=null && myEntryOrder.Name == "Short Entry")) && Low[0]>ShortLimitLine){
+					ShortSetup = false;
+					if(myEntryOrder!=null && myEntryOrder.Name == "Short Entry")
+						CancelOrder(myEntryOrder); //OnOrderUpdate will run, changing order
+				}
+
+				//Cancel Order once Long setup is no longer vaild
+				if((LongSetup || (myEntryOrder!=null && myEntryOrder.Name == "Long Entry")) && High[0]<LongLimitLine){
+					LongSetup = false;
+					if(myEntryOrder!=null && myEntryOrder.Name == "Long Entry")
+						CancelOrder(myEntryOrder); //OnOrderUpdate will run, changing order
+				}  
+
+				//Anti climax short setup formed
 				if(High[0]-High[1]>High[1]-High[2] && High[1]-High[2]>High[2]-High[3] && High[2]-High[3]>0){
-		
-					Draw.Square(this, "Setup High"+ CurrentBar, true, 0, High[0]+2, Brushes.White);
-				
 					ShortLimitLine = High[0] + TickSize;
-					double EntryLine = Low[0]-TickSize;
-					double quantity = Accountsize*0.01*Percent/((ShortLimitLine-EntryLine)*ContractTickPrice);
-					if(Position.MarketPosition == MarketPosition.Flat){
-						if(ToTime(Time[0]) >= 73000 && ToTime(Time[0]) <= 155900){
-							if(quantity>=0.75){
-								SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundToTickSize(1.5*(EntryLine-(ShortLimitLine-EntryLine))));
-								SetStopLoss(CalculationMode.Price, ShortLimitLine);
-								EnterShortStopMarket((int)Math.Round(quantity),EntryLine, "Short Entry");
+					ShortSetup = true;
+				}
+				//Enter short stop market once Red bar has form while setup is still vaild
+				if(ShortSetup && Close[0]-Open[0]<0){ //if setup is vaild and Red bar has formed 
+					if(Position.MarketPosition == MarketPosition.Flat){ //No active positions opened
+
+						//reset short setup if there exist one 
+						if(myEntryOrder != null && myEntryOrder.Name == "Short Entry")
+							CancelOrder(myEntryOrder); 
+						if(myEntryOrder == null){
+							double EntryLine = Low[0]-TickSize;
+							double Stoploss = High[0]+TickSize;
+							// attaining amount of contract to purchase, ensuring traindg no more than specify percentage of account size
+							double quantity = Accountsize*0.01*Percent/((Stoploss-EntryLine)*ContractTickPrice); 
+							if(ToTime(Time[0]) >= 70000 && ToTime(Time[0]) <= 155900){ //only allow trading between market open, 7a.m. - 3:59p.m.
+								if(quantity>=0.75){ 
+									//Set profit target as 1.5*stoploss, allowing 1:1.5 risk to reward ratio
+									SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundToTickSize(EntryLine-1.5*(Stoploss-EntryLine))); 
+									SetStopLoss(CalculationMode.Price, Stoploss);
+									EnterShortStopMarket(0, true, (int)Math.Round(quantity),EntryLine, "Short Entry"); 
+								}
 							}
 						}
 					}
+					ShortSetup = false;
 				}
-				if(Low[0]-Low[1]<Low[1]-Low[2] && Low[1]-Low[2]<Low[2]-Low[3] && Low[2]-Low[3]<0){
 
-					Draw.Square(this, "Setup Low"+ CurrentBar, true, 0, Low[0]-2, Brushes.White);
-
+				//Anti climax long setup formed
+				if(Low[0]-Low[1]<Low[1]-Low[2] && Low[1]-Low[2]<Low[2]-Low[3] && Low[2]-Low[3]<0){ 
 					LongLimitLine = Low[0]-TickSize;
-					double EntryLine = High[0]+TickSize;
-					double quantity = Accountsize*0.01*Percent/((EntryLine-LongLimitLine)*ContractTickPrice);
-					if(Position.MarketPosition == MarketPosition.Flat){
-						if(ToTime(Time[0]) >= 73000 && ToTime(Time[0]) <= 155900){
-							if(quantity>=0.75){
-								SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundDownToTickSize(1.5*(EntryLine+(EntryLine-LongLimitLine))));
-								SetStopLoss(CalculationMode.Price, LongLimitLine);
-								EnterLongStopMarket((int)Math.Round(quantity),EntryLine, "Long Entry");
-							}
-						}	
-					}
+					LongSetup = true;
 				}
-				//might have to look into trabar 
+				//Enter short stop market once Green bar has form while setup is still vaild
+				if(LongSetup && Close[0]-Open[0]>0){  //if setup is vaild and Green bar has formed 
+					if(Position.MarketPosition == MarketPosition.Flat){ //no active position opened
 
-				//bullish momentum - as price bar bottom clearing above the last swing high 
-					//use this as indicator for trend, 
-				//swing(3)
-				//can use anti climax as a exit signal, example if the anti climax formed in the bearish direction (about to reverse upwards) and you have an open position in the bear side, you can exit the position once it's formed 
-				//price high unable to clear the last swing low - up
-				//price low unable to clear the last swing high - down
-				//if anti climax formed on bear side a few bars ago and failed then formed again most likely its gonna fail again 
-
-				//you can use the anti climax to find the market bias, for example if a limit line is cleared, it shows that the market is going in that direction still hence strong market 
-				//in a up trend if the anti climax going towards the short side is very strong, meaning that there might be a trend change, hence if theres a setup for going to the bull side, dont take it cus its risky 
+						//reset short setup if there exist one
+						if(myEntryOrder != null && myEntryOrder.Name == "Long Entry")
+							CancelOrder(myEntryOrder);
+						if(myEntryOrder == null){
+							double EntryLine = High[0]+TickSize;
+							double Stoploss = Low[0]-TickSize;
+							// attaining amount of contract to purchase, ensuring traindg no more than specify percentage of account size
+							double quantity = Accountsize*0.01*Percent/((EntryLine-Stoploss)*ContractTickPrice);
+							if(ToTime(Time[0]) >= 70000 && ToTime(Time[0]) <= 155900){ //only allow trading between market open, 7a.m. - 3:59p.m.
+								if(quantity>=0.75){
+									//Set profit target as 1.5*stoploss, allowing 1:1.5 risk to reward ratio
+									SetProfitTarget(CalculationMode.Price, Instrument.MasterInstrument.RoundDownToTickSize(EntryLine+1.5*(EntryLine-Stoploss)));
+									SetStopLoss(CalculationMode.Price, Stoploss);
+									EnterLongStopMarket(0, true, (int)Math.Round(quantity),EntryLine, "Long Entry");
+								}	
+							}
+						}
+					}
+					LongSetup = false;
+				}
 			}
-
-			/*
-
-
-			able to accept 10 consecutive trades losses7
-			10 consecutive losses should not exceed a total 25 percent drawdown, 
-			no more than 1- 2 percent of the portfolio should be put at risk 
-			find amount of contracts based on /\
-			
-			assuming youre able to risk 30$, which means 6 points in MES, and the risk is 6 points, so you have 1 contract only
-
-			assuming you have 1500$, each contract is 1000 so youre able to risk 500 max,
-			with 2% of your account size, youre risking at most 30$
-			if your trade is 6 points risk, 
-
-			risk of trade = (entry price - stoploss price) * quantity traded *50 	
-			RR ratio with win rates is the key 
-			RRR 1:1 50%+, RRR 1.5:1 40%+, RRR 2:1 33%+ RRR 3:1 25%+ RRR 4:1 20%+
-			
-			*exit when another trade is forming in the opposite side and give that trade setup a try
-			*dont reenter after filling a setup 
-			*/
 			else{return;}		
 		}
 		
+		//Displayed properties
 		[NinjaScriptProperty]
 		[Display(ResourceType = typeof(Custom.Resource), Name = "Instrumental", GroupName = "NinjaScriptParameters", Order = 0)]
 		public string Instrumental { get; set; }
